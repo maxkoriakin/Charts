@@ -1,5 +1,5 @@
 //
-//  ChartView.swift
+//  BaseChartView.swift
 //  Charts
 //
 //  Created by Max Koriakin on 12/17/18.
@@ -8,7 +8,13 @@
 
 import UIKit
 
-class ChartView: UIView {
+protocol BaseChartViewDelegate: class {
+    
+    var axesOffset: UIEdgeInsets { get }
+    var axesWidth: CGFloat { get }
+}
+
+class BaseChartView: UIView {
 
     // MARK: - Lazy Properties
     lazy var xAxis: UIView = {
@@ -24,23 +30,25 @@ class ChartView: UIView {
     }()
     
     // MARK: - Properties
+    weak var delegate: BaseChartViewDelegate?
+    
     var count: Int = 0
     var yLines: [UIView] = []
     var dots: [ChartPoint] = []
     
     // MARK: - Life Cycle
-    init() {
+    init(delegate: BaseChartViewDelegate) {
+        self.delegate = delegate
         super.init(frame: CGRect.zero)
         setupAxis()
     }
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
 }
 
 // MARK: - Axis
-extension ChartView {
+extension BaseChartView {
     // MARK: - Setup
     func setupAxis() {
         setupHorizontalAxis()
@@ -50,22 +58,26 @@ extension ChartView {
     func setupHorizontalAxis() {
         addSubview(xAxis)
         xAxis.translatesAutoresizingMaskIntoConstraints = false
+        guard let inset = delegate?.axesOffset, let width = delegate?.axesWidth else { return }
+        
         NSLayoutConstraint.activate([
             xAxis.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-            xAxis.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
-            xAxis.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
-            xAxis.heightAnchor.constraint(equalToConstant: 3),
+            xAxis.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: inset.left),
+            xAxis.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: inset.right),
+            xAxis.heightAnchor.constraint(equalToConstant: width),
         ])
     }
     
     func setupVerticalAxis() {
         addSubview(yAxis)
         yAxis.translatesAutoresizingMaskIntoConstraints = false
+        guard let inset = delegate?.axesOffset, let width = delegate?.axesWidth else { return }
+
         NSLayoutConstraint.activate([
-            yAxis.centerXAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
-            yAxis.topAnchor.constraint(equalTo: self.topAnchor, constant: 20),
-            yAxis.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -20),
-            yAxis.widthAnchor.constraint(equalToConstant: 3)
+            yAxis.centerXAnchor.constraint(equalTo: self.leadingAnchor, constant: inset.left),
+            yAxis.topAnchor.constraint(equalTo: self.topAnchor, constant: inset.top),
+            yAxis.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: inset.bottom),
+            yAxis.widthAnchor.constraint(equalToConstant: width)
         ])
     }
     
